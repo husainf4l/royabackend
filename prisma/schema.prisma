@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            String         @id @default(uuid())
+    email         String         @unique
+    password      String
+    firstName     String?
+    lastName      String?
+    role          Role           @default(USER)
+    isActive      Boolean        @default(true)
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime       @updatedAt @map("updated_at")
+    refreshTokens RefreshToken[]
+
+    @@map("users")
+}
+
+model RefreshToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    expiresAt DateTime @map("expires_at")
+    createdAt DateTime @default(now()) @map("created_at")
+    userId    String   @map("user_id")
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    revoked   Boolean  @default(false)
+
+    @@map("refresh_tokens")
+}
+
+enum Role {
+    USER
+    ADMIN
+    MODERATOR
+}
+
+model Player {
+    id          String         @id @default(uuid())
+    name        String
+    number      Int
+    position    String
+    performance Int
+    energy      Int
+    speed       Float
+    teamName    String
+    topShots    String[]       @default([])
+    goals       Int            @default(0)
+    assists     Int            @default(0)
+    teamColor   String
+    rating      Float
+    moments     PlayerMoment[]
+    createdAt   DateTime       @default(now()) @map("created_at")
+    updatedAt   DateTime       @updatedAt @map("updated_at")
+
+    @@map("players")
+}
+
+model ReplayMoment {
+    id              String         @id @default(uuid())
+    title           String
+    description     String
+    timestamp       String
+    positionMinutes Int
+    positionSeconds Int
+    type            MomentType
+    thumbnailUrl    String?
+    minute          Int
+    players         PlayerMoment[]
+    gameId          String?
+    game            Game?          @relation(fields: [gameId], references: [id])
+    createdAt       DateTime       @default(now()) @map("created_at")
+    updatedAt       DateTime       @updatedAt @map("updated_at")
+
+    @@map("replay_moments")
+}
+
+model PlayerMoment {
+    playerId       String
+    player         Player       @relation(fields: [playerId], references: [id])
+    replayMomentId String
+    replayMoment   ReplayMoment @relation(fields: [replayMomentId], references: [id])
+
+    @@id([playerId, replayMomentId])
+    @@map("player_moments")
+}
+
+model Game {
+    id          String         @id @default(uuid())
+    homeTeam    String
+    awayTeam    String
+    homeScore   Int            @default(0)
+    awayScore   Int            @default(0)
+    currentTime String
+    matchPhase  String
+    moments     ReplayMoment[]
+    createdAt   DateTime       @default(now()) @map("created_at")
+    updatedAt   DateTime       @updatedAt @map("updated_at")
+
+    @@map("games")
+}
+
+enum MomentType {
+    GOAL
+    TACKLE
+    SAVE
+    ASSIST
+    FOUL
+}
