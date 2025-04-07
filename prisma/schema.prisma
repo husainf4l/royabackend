@@ -58,10 +58,26 @@ model Player {
     teamColor   String
     rating      Float
     moments     PlayerMoment[]
+    livePlayer  LivePlayer?
     createdAt   DateTime       @default(now()) @map("created_at")
     updatedAt   DateTime       @updatedAt @map("updated_at")
 
     @@map("players")
+}
+
+model LivePlayer {
+    id          String   @id @default(uuid())
+    playerId    String   @unique
+    player      Player   @relation(fields: [playerId], references: [id])
+    imageUrl    String?
+    videoUrl    String?
+    isActive    Boolean  @default(true)
+    lastSeen    DateTime @default(now())
+    coordinates Json? // Can store position coordinates as JSON
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+
+    @@map("live_players")
 }
 
 model ReplayMoment {
