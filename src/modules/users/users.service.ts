@@ -1,45 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from '../../database/database.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
+import { Role } from '@prisma/client'; // Import the Role enum from Prisma
 
 @Injectable()
 export class UsersService {
-  private users = [];
+  constructor(private readonly prisma: DatabaseService) {}
 
-  findAll() {
-    return this.users;
+  async findAll() {
+    return this.prisma.user.findMany();
   }
 
-  findOne(id: string) {
-    return this.users.find(user => user.id === id);
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
   }
 
-  create(createUserDto: CreateUserDto) {
-    const newUser = {
-      id: Date.now().toString(),
+  async create(createUserDto: CreateUserDto) {
+    // Ensure default values for optional fields and cast role to the Role enum
+    const data = {
       ...createUserDto,
+      role: (createUserDto.role || Role.USER) as Role, // Cast role to Role enum
+      isActive: createUserDto.isActive ?? true, // Default isActive
     };
-    this.users.push(newUser);
-    return newUser;
+    return this.prisma.user.create({ data });
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex !== -1) {
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        ...updateUserDto,
-      };
-      return this.users[userIndex];
-    }
-    return null;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const data = {
+      ...updateUserDto,
+      role: updateUserDto.role ? (updateUserDto.role as Role) : undefined, // Cast role to Role enum if provided
+    };
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: string) {
-    const userIndex = this.users.findIndex(user => user.id === id);
-    if (userIndex !== -1) {
-      const [removedUser] = this.users.splice(userIndex, 1);
-      return removedUser;
-    }
-    return null;
+  async remove(id: string) {
+    return this.prisma.user.delete({ where: { id } });
   }
 }

@@ -2,6 +2,6 @@ export class CreateLivePlayerDto {
   playerId: string;
   imageUrl?: string;
   videoUrl?: string;
-  isActive?: boolean = true;
-  coordinates?: any;
+  isActive?: boolean; // Default is true
+  coordinates?: Record<string, any>; // JSON field
 }

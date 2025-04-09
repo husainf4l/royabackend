@@ -44,25 +44,75 @@ enum Role {
 }
 
 model Player {
-    id          String         @id @default(uuid())
-    name        String
-    number      Int
-    position    String
-    performance Int
-    energy      Int
-    speed       Float
-    teamName    String
-    topShots    String[]       @default([])
-    goals       Int            @default(0)
-    assists     Int            @default(0)
-    teamColor   String
-    rating      Float
-    moments     PlayerMoment[]
-    livePlayer  LivePlayer?
-    createdAt   DateTime       @default(now()) @map("created_at")
-    updatedAt   DateTime       @updatedAt @map("updated_at")
+    id            String              @id @default(uuid()) // Changed from Int to String for consistency
+    name          String
+    number        Int
+    position      String
+    team          String
+    nationality   String
+    performances  PlayerPerformance[]
+    livePlayer    LivePlayer? // Fixed casing for consistency
+    playerMoments PlayerMoment[] // Fixed casing for consistency
+    imageUrl      String?
+    createdAt     DateTime            @default(now()) @map("created_at")
+    updatedAt     DateTime            @updatedAt @map("updated_at")
+    embedding     Bytes?
 
     @@map("players")
+}
+
+model Match {
+    id           String              @id @default(uuid()) // Changed from Int to String for consistency
+    stadium      String
+    imageUrl     String?
+    date         DateTime
+    homeTeam     String
+    awayTeam     String
+    status       String // e.g., "scheduled", "live", "finished"
+    performances PlayerPerformance[]
+    events       MatchEvent[] // Added relation to MatchEvent
+    embedding    Bytes?
+
+    @@map("matches")
+}
+
+model PlayerPerformance {
+    id       String @id @default(uuid()) // Changed from Int to String for consistency
+    playerId String
+    matchId  String
+    player   Player @relation(fields: [playerId], references: [id])
+    match    Match  @relation(fields: [matchId], references: [id])
+
+    // Movement & Speed
+    topSpeed      Float? // km/h
+    avgSpeed      Float?
+    distanceKm    Float?
+    sprintCount   Int?
+    accelerations Int?
+
+    // Technical Stats
+    passesCompleted Int?
+    shotsOnTarget   Int?
+    interceptions   Int?
+    tackles         Int?
+    embedding       Bytes?
+
+    // Biometric Data
+    heartRateAvg Int?
+    heartRateMax Int?
+    bodyTempC    Float?
+    fatigueScore Float? // AI score 0–1
+    staminaScore Float? // AI score 0–1
+
+    // Visuals & Tracking
+    heatmapUrl  String? // Link to image or interactive UI
+    positionLog Json? // [{ time: string, x: float, y: float }]
+
+    createdAt DateTime @default(now())
+
+    @@index([playerId])
+    @@index([matchId])
+    @@map("player_performances")
 }
 
 model LivePlayer {
@@ -76,8 +126,24 @@ model LivePlayer {
     coordinates Json? // Can store position coordinates as JSON
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @updatedAt @map("updated_at")
+    embedding   Bytes?
 
     @@map("live_players")
+}
+
+model MatchEvent {
+    id        String   @id @default(uuid()) // Changed from Int to String for consistency
+    matchId   String
+    match     Match    @relation(fields: [matchId], references: [id]) // Added relation to Match
+    playerId  String?
+    type      String // "goal", "tackle", "yellow_card", etc.
+    minute    Int
+    detail    String?
+    createdAt DateTime @default(now())
+    embedding Bytes?
+
+    @@index([matchId])
+    @@map("match_events")
 }
 
 model ReplayMoment {
@@ -104,6 +170,7 @@ model PlayerMoment {
     player         Player       @relation(fields: [playerId], references: [id])
     replayMomentId String
     replayMoment   ReplayMoment @relation(fields: [replayMomentId], references: [id])
+    embedding      Bytes?
 
     @@id([playerId, replayMomentId])
     @@map("player_moments")

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 
 @Controller('match/lists')
@@ -9,18 +9,18 @@ export class ListController {
   async getTeams() {
     // Get unique teams from players
     const players = await this.db.player.findMany();
-    const teams = [...new Set(players.map(player => player.teamName))];
+    const teams = [...new Set(players.map(player => player.team))]; // Updated to match the `team` field in the schema
     return { teams };
   }
 
-  @Get('players-by-team/:teamName')
-  async getPlayersByTeam(@Param('teamName') teamName: string) {
+  @Get('players-by-team/:team')
+  async getPlayersByTeam(@Param('team') team: string) {
     return await this.db.player.findMany({
       where: {
-        teamName,
+        team, // Updated to match the `team` field in the schema
       },
       orderBy: {
-        rating: 'desc',
+        number: 'asc', // Changed to order by `number` instead of `rating` (not in schema)
       },
     });
   }
@@ -30,7 +30,7 @@ export class ListController {
     const limit = parseInt(count) || 5;
     return await this.db.player.findMany({
       orderBy: {
-        rating: 'desc',
+        number: 'asc', // Changed to order by `number` (no `rating` field in schema)
       },
       take: limit,
     });

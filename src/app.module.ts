@@ -6,9 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { MatchModule } from './modules/match/match.module';
 import { LivePlayersModule } from './modules/live-players/live-players.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
-  imports: [DatabaseModule, UsersModule, AuthModule, MatchModule, LivePlayersModule],
+  imports: [DatabaseModule, UsersModule, AuthModule, MatchModule, LivePlayersModule, AnalyticsModule],
   controllers: [AppController],
   providers: [AppService],
 })

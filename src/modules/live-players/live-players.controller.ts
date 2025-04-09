@@ -31,15 +31,6 @@ export class LivePlayersController {
     return this.livePlayersService.create(createLivePlayerDto);
   }
 
-  /**
-   * Seeds demo data for LivePlayers
-   * NOTE: Make sure to run database migrations first:
-   * npm run prisma:migrate
-   */
-  @Post('seed')
-  async seedLivePlayerData() {
-    return this.livePlayersService.seedDemoData();
-  }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateLivePlayerDto: UpdateLivePlayerDto) {
