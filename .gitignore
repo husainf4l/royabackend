@@ -34,10 +34,10 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Environment variables
-# .env
-# .env.*
-# !.env.example
+Environment variables
+.env
+.env.*
+!.env.example
 
 # Database
 /prisma/dev.db
