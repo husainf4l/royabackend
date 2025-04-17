@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  role              Role           @default(USER)
+  isActive          Boolean        @default(true)
+  livekitToken      String?
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  refreshTokens     RefreshToken[]
+  socialProvider    String?
+  socialId          String?
+  profilePictureUrl String?
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    String   @map("user_id")
+  revoked   Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Player {
+  id            String              @id @default(uuid())
+  name          String
+  number        Int
+  position      String
+  team          String
+  nationality   String
+  imageUrl      String?
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  embedding     Bytes?
+  livePlayer    LivePlayer?
+  playerMoments PlayerMoment[]
+  performances  PlayerPerformance[]
+}
+
+model Match {
+  id           String              @id @default(uuid())
+  stadium      String
+  imageUrl     String?
+  date         DateTime
+  homeTeam     String
+  awayTeam     String
+  status       String
+  embedding    Bytes?
+  events       MatchEvent[]
+  performances PlayerPerformance[]
+}
+
+model PlayerPerformance {
+  id              String   @id @default(uuid())
+  playerId        String
+  matchId         String
+  topSpeed        Float?
+  avgSpeed        Float?
+  distanceKm      Float?
+  sprintCount     Int?
+  accelerations   Int?
+  passesCompleted Int?
+  shotsOnTarget   Int?
+  interceptions   Int?
+  tackles         Int?
+  heartRateAvg    Int?
+  heartRateMax    Int?
+  bodyTempC       Float?
+  fatigueScore    Float?
+  staminaScore    Float?
+  heatmapUrl      String?
+  positionLog     Json?
+  createdAt       DateTime @default(now())
+  embedding       Bytes?
+  match           Match    @relation(fields: [matchId], references: [id])
+  player          Player   @relation(fields: [playerId], references: [id])
+
+  @@index([playerId])
+  @@index([matchId])
+}
+
+model LivePlayer {
+  id          String   @id @default(uuid())
+  playerId    String   @unique
+  imageUrl    String?
+  videoUrl    String?
+  isActive    Boolean  @default(true)
+  lastSeen    DateTime @default(now())
+  coordinates Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  embedding   Bytes?
+  player      Player   @relation(fields: [playerId], references: [id])
+}
+
+model MatchEvent {
+  id        String   @id @default(uuid())
+  matchId   String
+  playerId  String?
+  type      String
+  minute    Int
+  detail    String?
+  createdAt DateTime @default(now())
+  embedding Bytes?
+  match     Match    @relation(fields: [matchId], references: [id])
+
+  @@index([matchId])
+}
+
+model ReplayMoment {
+  id              String         @id @default(uuid())
+  title           String
+  description     String
+  timestamp       String
+  positionMinutes Int
+  positionSeconds Int
+  type            MomentType
+  thumbnailUrl    String?
+  minute          Int
+  gameId          String?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  players         PlayerMoment[]
+  game            Game?          @relation(fields: [gameId], references: [id])
+}
+
+model PlayerMoment {
+  playerId       String
+  replayMomentId String
+  embedding      Bytes?
+  player         Player       @relation(fields: [playerId], references: [id])
+  replayMoment   ReplayMoment @relation(fields: [replayMomentId], references: [id])
+
+  @@id([playerId, replayMomentId])
+}
+
+model Game {
+  id          String         @id @default(uuid())
+  homeTeam    String
+  awayTeam    String
+  homeScore   Int            @default(0)
+  awayScore   Int            @default(0)
+  currentTime String
+  matchPhase  String
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  moments     ReplayMoment[]
+}
+
+model LiveRoom {
+  id            String     @id @default(uuid())
+  name          String
+  livekitRoomId String     @unique
+  status        RoomStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  description   String?
+  imageUrl      String?
+}
+
+model n8n_chat_histories {
+  id         Int    @id @default(autoincrement())
+  session_id String @db.VarChar(255)
+  message    Json
+}
+
+model n8n_vectors {
+  id       String  @id @default(uuid())
+  text     String?
+  metadata Json?
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum MomentType {
+  GOAL
+  TACKLE
+  SAVE
+  ASSIST
+  FOUL
+}
+
+enum RoomStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
