@@ -6,6 +6,8 @@ import { PassportInitMiddleware } from './middlewares/passport-init.middleware';
 import { LivekitModule } from './livekit/livekit.module';
 import { AIAgentModule } from './ai-agent/ai-agent.module';
 import { ConfigModule } from '@nestjs/config';
+import { PlayersModule } from './players/players.module';
+import { WiddPostModule } from './widdpost/widdpost.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     LivekitModule,
     AIAgentModule,
+    PlayersModule,
+    WiddPostModule,
   ],
   controllers: [],
   providers: [],

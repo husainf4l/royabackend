@@ -253,21 +253,22 @@ Use these status values:
 
   /**
    * Generates an appropriate message based on the response status
+   * with instructions for the frontend
    */
   private generateResponseMessage(response: AIAgentResponseDto): string {
     switch (this.determineResponseStatus(response)) {
       case 'success':
-        return 'Player information successfully identified';
+        return 'Player information successfully identified. Frontend should display both player number and team name prominently, and proceed with the next step in the workflow.';
       case 'partial':
         if (response.playerNumber !== null) {
-          return 'Player number identified, but team could not be determined';
+          return 'Player number identified, but team could not be determined. Frontend should display the player number and prompt user to manually select or confirm the team from the match data options.';
         } else {
-          return 'Team identified, but player number could not be determined';
+          return 'Team identified, but player number could not be determined. Frontend should display the team name and prompt user to manually enter or confirm the player number.';
         }
       case 'failed':
-        return 'Could not identify player information from the image. Please ensure the image clearly shows a player with visible number and team colors';
+        return 'Could not identify player information from the image. Frontend should display an error message and prompt user to either upload a clearer image or manually input both player number and team. Ensure the image clearly shows a player with visible number and team colors.';
       default:
-        return 'Analysis completed';
+        return 'Analysis completed. Frontend should check the playerNumber and team fields to determine how to proceed.';
     }
   }
 
